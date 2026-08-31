@@ -1,0 +1,64 @@
+# FishCast на VPS: Caddy (статика фронта + /api + авто-HTTPS), PHP-FPM, PostgreSQL, крон.
+# Запуск: cp .env.example .env && отредактируй && docker compose up -d --build
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ..:/site:ro                # фронтенд — корень репозитория
+      - ./public:/backend/public:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [php]
+
+  php:
+    build: .
+    restart: unless-stopped
+    environment: &phpenv
+      DB_HOST: db
+      DB_NAME: ${DB_NAME:-fishcast}
+      DB_USER: ${DB_USER:-fishcast}
+      DB_PASS: ${DB_PASS}
+      APP_SECRET: ${APP_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      WEATHER_TTL_SEC: ${WEATHER_TTL_SEC:-1800}
+    volumes:
+      - .:/backend:ro
+    depends_on:
+      db: { condition: service_healthy }
+
+  cron:
+    build: .
+    restart: unless-stopped
+    command: sh /backend/bin/cron.sh
+    environment: *phpenv
+    volumes:
+      - .:/backend:ro
+    depends_on:
+      db: { condition: service_healthy }
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-fishcast}
+      POSTGRES_USER: ${DB_USER:-fishcast}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro   # первичная схема при первом старте
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-fishcast}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -158,4 +158,9 @@ const CONFIG = {
   ],
 
   defaultPoint: { lat: 56.30, lon: 53.20 }, // Нижнекамское вдхр., район Каракулино
+
+  // Бэкенд (backend/): после развёртывания на VPS впиши сюда домен и имя бота.
+  // null — приложение работает полностью локально (localStorage), как и раньше.
+  apiBase: null,          // например 'https://fishcast.example.ru' ('' — тот же домен)
+  telegramBot: null,      // username бота для Telegram Login, например 'fishcast_bot'
 };

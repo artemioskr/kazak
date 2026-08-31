@@ -1,0 +1,16 @@
+# Домен из .env (APP_DOMAIN). Для localhost Caddy выпустит self-signed сертификат,
+# для реального домена — автоматически получит Let's Encrypt.
+{$APP_DOMAIN:localhost} {
+	encode gzip
+
+	handle /api/* {
+		root * /backend/public
+		rewrite * /index.php
+		php_fastcgi php:9000
+	}
+
+	handle {
+		root * /site
+		file_server
+	}
+}

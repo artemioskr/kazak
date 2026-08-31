@@ -143,6 +143,7 @@ $('save-point').addEventListener('click', () => {
   list.push({ name, lat: S.lat, lon: S.lon });
   Points.store(list);
   renderPoints();
+  scheduleSync();
 });
 
 $('del-point').addEventListener('click', () => {
@@ -151,6 +152,7 @@ $('del-point').addEventListener('click', () => {
   const [lat, lon] = v.split(',').map(Number);
   Points.store(Points.all().filter(p => !(p.lat === lat && p.lon === lon)));
   renderPoints();
+  scheduleSync();
 });
 
 // --- загрузка и расчёт ---
@@ -363,6 +365,7 @@ $('log-add').addEventListener('click', () => {
   });
   Journal.store(list);
   renderJournal();
+  scheduleSync();
 });
 
 $('log-export').addEventListener('click', () => {
@@ -391,11 +394,76 @@ function renderJournal() {
       (e.note ? `<div class="j-note">${e.note.replace(/</g, '&lt;')}</div>` : '');
     li.querySelector('.j-del').addEventListener('click', () => {
       if (!confirm('Удалить запись из журнала?')) return;
-      const l = Journal.all(); l.splice(idx, 1); Journal.store(l); renderJournal();
+      const l = Journal.all(); l.splice(idx, 1); Journal.store(l); renderJournal(); scheduleSync();
     });
     ul.appendChild(li);
   });
 }
+
+// --- синхронизация с бэкендом (если настроен CONFIG.apiBase) ---
+// Слияние: точки — объединение по координатам, журнал — по метке времени записи.
+async function syncNow(pullFirst) {
+  if (!Api.loggedIn()) return;
+  try {
+    if (pullFirst) {
+      const remote = await Api.pullState();
+      const pts = Points.all();
+      const seen = new Set(pts.map(p => `${p.lat},${p.lon}`));
+      for (const p of remote.points || [])
+        if (p && p.name && !seen.has(`${p.lat},${p.lon}`)) pts.push(p);
+      Points.store(pts);
+      const jr = Journal.all();
+      const jseen = new Set(jr.map(e => e.ts));
+      for (const e of remote.journal || [])
+        if (e && e.ts && !jseen.has(e.ts)) jr.push(e);
+      jr.sort((a, b) => (a.ts < b.ts ? 1 : -1));
+      Journal.store(jr);
+      renderPoints();
+      renderJournal();
+    }
+    await Api.pushState(Points.all(), Journal.all());
+  } catch (e) {
+    console.warn('синхронизация:', e.message);
+  }
+}
+
+let syncTimer = null;
+function scheduleSync() {
+  if (!Api.loggedIn()) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => syncNow(false), 2000);
+}
+
+function renderAuth() {
+  const el = $('auth-area');
+  if (!Api.ready) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML = '';
+  if (Api.token) {
+    const name = localStorage.getItem('fishcast.user') || '';
+    el.innerHTML = `<span>Синхронизация включена${name ? ': ' + name : ''}</span> ` +
+      `<button id="logout" type="button">Выйти</button>`;
+    $('logout').addEventListener('click', () => { Api.logout(); renderAuth(); });
+  } else if (CONFIG.telegramBot) {
+    const s = document.createElement('script');
+    s.src = 'https://telegram.org/js/telegram-widget.js?22';
+    s.setAttribute('data-telegram-login', CONFIG.telegramBot);
+    s.setAttribute('data-size', 'medium');
+    s.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    el.appendChild(s);
+  }
+}
+
+// колбэк виджета Telegram Login — должен быть глобальным
+window.onTelegramAuth = async user => {
+  try {
+    await Api.loginTelegram(user);
+    renderAuth();
+    await syncNow(true);
+  } catch (e) {
+    status('Вход не удался: ' + e.message, true);
+  }
+};
 
 // --- резервная копия: до появления аккаунтов данные живут только в localStorage ---
 const BACKUP_KEYS = ['fishcast.point', 'fishcast.points', 'fishcast.species',
@@ -437,6 +505,8 @@ $('backup-file').addEventListener('change', async () => {
   renderJournal();
   // Kp подтягивается в фоне; когда придёт — пересчитать, если прогноз уже на экране
   Kp.load().then(() => { if (Kp.ready && S.data) { compute(); renderAll(); } });
+  // бэкенд (если настроен): проба health, кнопка входа, стартовый синк
+  Api.init().then(() => { renderAuth(); if (Api.loggedIn()) syncNow(true); });
   const saved = localStorage.getItem('fishcast.point');
   if (saved) {
     try { const p = JSON.parse(saved); map.setView([p.lat, p.lon], 10); setPoint(p.lat, p.lon); return; } catch (_) {}

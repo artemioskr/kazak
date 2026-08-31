@@ -27,6 +27,8 @@
 - `tools/backtest.js` — бэктест на историческом архиве:
   `TZ=Europe/Samara node tools/backtest.js 2026-06-01 2026-08-31 zander`
 - `docs/plan.md` — план проекта
+- `backend/` — API для VPS: аккаунты (Telegram), синк точек/журнала, кэш погоды,
+  гидрология Нижнекамской ГЭС. Развёртывание: `backend/README.md`
 
 ## Данные
 - Open-Meteo, лицензия CC BY 4.0, бесплатно для некоммерческого использования.

@@ -1,6 +1,13 @@
 // Open-Meteo. Возвращает почасовые ряды, включая 2 прошлых дня для тренда давления.
 const Weather = {
   async fetch(lat, lon) {
+    // через бэкенд, если он доступен: кэш щадит лимиты Open-Meteo
+    if (typeof Api !== 'undefined' && Api.ready) {
+      try {
+        const r = await fetch(`${Api.base}/api/weather?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`);
+        if (r.ok) return Weather.normalize(await r.json());
+      } catch (_) { /* упал — идём напрямую */ }
+    }
     const p = new URLSearchParams({
       latitude: lat.toFixed(4),
       longitude: lon.toFixed(4),
