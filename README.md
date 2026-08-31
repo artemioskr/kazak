@@ -20,6 +20,9 @@
 - `js/app.js` — интерфейс: карта, сохранённые точки, журнал рыбалок
 - `tools/check-scoring.js` — проверка скоринга на реальном прогнозе из консоли:
   `npm i --no-save suncalc && TZ=Europe/Samara node tools/check-scoring.js zander 0`
+- `tools/test-scoring.js` — юнит-тесты модели: `TZ=Europe/Samara node tools/test-scoring.js`
+- `tools/backtest.js` — бэктест на историческом архиве:
+  `TZ=Europe/Samara node tools/backtest.js 2026-06-01 2026-08-31 zander`
 - `docs/plan.md` — план проекта
 
 ## Данные
