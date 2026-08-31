@@ -1,5 +1,5 @@
 # Разведка источников уровня воды (одноразовый, запуск руками).
-# Раунд 5: таблица на tatarmeteo пуста в HTML — ищем iframe/AJAX-эндпоинт данных.
+# Раунд 6: Татэнерго (владелец Нижнекамской ГЭС) и список «Указаний» Росводресурсов.
 name: hydro-probe
 
 on:
@@ -9,22 +9,20 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Найти источник данных таблицы
+      - name: Татэнерго и Росводресурсы
         run: |
           UA="Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0"
-          curl -skL -m 30 -A "$UA" -o page.html \
-            "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-nizhnekamskomu-vodoxranilishhu.html"
-          echo "== iframe / script src / все URL в странице:"
-          grep -oiE '<iframe[^>]*>' page.html || true
-          grep -oiE '<script[^>]*src="[^"]*"' page.html || true
-          grep -oE '(https?:)?//[a-zA-Z0-9./_-]+' page.html | sort -u | grep -viE 'w3.org|fonts|jquery|bootstrap|yandex|google|vk.com|schema' | head -30
-          grep -oE '"[^"]*\.(php|json|xml|csv)[^"]*"' page.html | sort -u | head -20
-          echo "== inline-скрипты (без библиотек):"
-          python3 - <<'PY'
-          import re
-          h = open('page.html', encoding='utf-8', errors='replace').read()
-          for m in re.finditer(r'(?s)<script(?![^>]*src)[^>]*>(.*?)</script>', h):
-              s = m.group(1).strip()
-              if s and len(s) < 3000:
-                  print('---'); print(s[:1500])
-          PY
+          probe() {
+            echo "===================== $1"
+            rm -f page.html
+            code=$(curl -skL -m 30 -A "$UA" -o page.html -w "%{http_code}" "$1" || echo FAIL)
+            echo "HTTP $code, bytes: $(wc -c < page.html 2>/dev/null || echo 0)"
+            [ -s page.html ] || return 0
+            tr '<' '\n' < page.html | grep -iE 'нижнекамск|бьеф|приток|сброс|уровен|гидролог' | sed 's/^[a-zA-Z0-9 ="/_.:-]*>//' | head -40
+            echo "--- ссылки:"
+            grep -oiE 'href="[^"]*(gidro|hydro|ges|воды|rezhim|ukazani)[^"]*"' page.html | sort -u | head -20
+          }
+          probe "https://www.tatgencom.ru/"
+          probe "https://tatgencom.ru/activity/gidrologicheskiy-rezhim/"
+          probe "https://www.tatgencom.ru/upload/"
+          probe "https://voda.gov.ru/activities/svedeniya-o-rezhimakh-raboty-krupneyshikh-vodokhranilishch-i-ikh-kaskadov/ukazaniya-o-rezhimakh-raboty-gidrouzlov-vodokhranilishch-volzhsko-kamskogo-kaskada/"
