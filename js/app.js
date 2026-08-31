@@ -210,6 +210,8 @@ function renderDay() {
   ban.hidden = !Scoring.inSpawningBan(d);
   ban.textContent = CONFIG.spawningBan.text;
 
+  renderDaySummary(idxs);
+
   // окна клёва
   const dayMax = Math.max(...dayRes.map(r => r.score));
   const w = Scoring.windows(dayRes, Math.max(CONFIG.categories[1].from, dayMax - 14)); // окна — лучшие часы дня, не всё подряд
@@ -240,6 +242,32 @@ function renderDay() {
   }
   renderHour();
   markBar();
+}
+
+// Погода дня одной строкой: диапазоны вместо почасовой простыни
+function renderDaySummary(idxs) {
+  const hs = idxs.map(i => S.data.hours[i]);
+  const tMin = Math.min(...hs.map(h => h.temp)), tMax = Math.max(...hs.map(h => h.temp));
+  const wMin = Math.min(...hs.map(h => h.wind)), wMax = Math.max(...hs.map(h => h.wind));
+  const gMax = Math.max(...hs.map(h => h.gust));
+  // преобладающее направление — среднее векторное, иначе С и СЗ усреднились бы в чушь
+  let sx = 0, sy = 0;
+  hs.forEach(h => { const a = h.windDir * Math.PI / 180; sx += Math.sin(a); sy += Math.cos(a); });
+  const dir = dirName((Math.atan2(sx, sy) * 180 / Math.PI + 360) % 360);
+  const dP = hs[hs.length - 1].pressure - hs[0].pressure;
+  const pTxt = Math.abs(dP) < 2 ? 'ровное' : dP > 0 ? `растёт, +${dP.toFixed(0)} гПа` : `падает, ${dP.toFixed(0)} гПа`;
+  const rain = hs.reduce((s, h) => s + h.precip, 0);
+  const cloudAvg = hs.reduce((s, h) => s + h.cloud, 0) / hs.length;
+  const sky = cloudAvg >= 70 ? 'пасмурно' : cloudAvg >= 35 ? 'переменная облачность' : 'ясно';
+  const parts = [
+    `${Math.round(tMin)}…${Math.round(tMax)}°, ${sky}`,
+    `ветер ${wMin.toFixed(0)}–${wMax.toFixed(0)} м/с ${dir}` +
+      (gMax >= CONFIG.wind.gustyFrom ? `, порывы до ${gMax.toFixed(0)}` : ''),
+    `давление ${pTxt}`,
+    rain >= 0.2 ? `осадки ${rain.toFixed(1)} мм` : 'без осадков',
+  ];
+  if (S.data.waterTemp) parts.push(`вода ~${S.data.waterTemp[idxs[Math.min(12, idxs.length - 1)]].toFixed(0)}°`);
+  $('day-summary').innerHTML = parts.map(p => `<span>${p}</span>`).join('');
 }
 
 function markBar() {

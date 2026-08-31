@@ -54,6 +54,11 @@ button, select { font: inherit; }
 
 .ban { margin: 10px 16px 0; padding: 10px 12px; border-left: 3px solid var(--amber); background: var(--deep); font-size: 13px; color: var(--ink); }
 
+/* сводка погоды дня */
+.day-summary { display: flex; flex-wrap: wrap; gap: 2px 8px; padding: 8px 16px 0; font-size: 13px; color: var(--ink); }
+.day-summary span { white-space: nowrap; }
+.day-summary span:not(:last-child)::after { content: '·'; margin-left: 8px; color: var(--silt); }
+
 .windows { padding: 10px 16px 6px; font-size: 14px; }
 .windows .w { display: inline-block; margin: 0 8px 6px 0; padding: 4px 10px; border-radius: 6px; background: var(--amber-dim); color: var(--ink); }
 .windows .none { color: var(--mute); }
