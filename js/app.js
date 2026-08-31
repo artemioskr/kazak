@@ -115,9 +115,10 @@ function renderDays() {
 }
 
 function dotColor(score) {
-  if (score >= 72) return 'var(--amber)';
-  if (score >= 58) return 'var(--amber-dim)';
-  if (score >= 40) return '#4f6474';
+  const c = CONFIG.categories;
+  if (score >= c[0].from) return 'var(--amber)';
+  if (score >= c[1].from) return 'var(--amber-dim)';
+  if (score >= c[2].from) return '#4f6474';
   return 'var(--silt)';
 }
 
@@ -139,7 +140,7 @@ function renderDay() {
 
   // окна клёва
   const dayMax = Math.max(...dayRes.map(r => r.score));
-  const w = Scoring.windows(dayRes, Math.max(58, dayMax - 14)); // окна — лучшие часы дня, не всё подряд
+  const w = Scoring.windows(dayRes, Math.max(CONFIG.categories[1].from, dayMax - 14)); // окна — лучшие часы дня, не всё подряд
   const wEl = $('windows');
   wEl.innerHTML = w.length
     ? 'Окна: ' + w.map(x => `<span class="w">${pad(x.from)}–${pad(x.to + 1)} · до ${x.max}</span>`).join('')

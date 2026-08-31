@@ -1,8 +1,8 @@
 // Вся настройка модели живёт здесь. В коде скоринга — только формулы.
 // Версия конфига нужна для будущей калибровки по журналу.
 const CONFIG = {
-  version: '0.1.0',
-  baseline: 40,
+  version: '0.2.0',
+  baseline: 42,
 
   // Профили видов. multiplier — насколько сильно фактор влияет на этот вид.
   species: {
@@ -69,7 +69,9 @@ const CONFIG = {
     slowFallMax: 4,         // −1.5..−4 за 6 ч — плавно падает (хорошо)
     sharpBand: 4,           // |Δ6h| > 4 — резкий скачок (плохо)
     day24Bad: 8,            // |Δ24h| > 8 — сутки нестабильности
-    weights: { stable: 8, slowFall: 12, slowRise: 3, sharp: -16, day24: -8 },
+    // stable — норма, а не событие: маленький бонус, иначе инфляция оценок
+    // (при stable:8 на реальном прогнозе 38% часов выходили «отлично»)
+    weights: { stable: 2, slowFall: 10, slowRise: 0, sharp: -16, day24: -8 },
   },
 
   // Ветер, м/с
@@ -99,7 +101,7 @@ const CONFIG = {
   },
 
   solunar: {
-    weights: { major: 12, minor: 6, phaseBonus: 4 },
+    weights: { major: 10, minor: 5, phaseBonus: 3 },
     phaseWindowDays: 2,     // ±2 дня от новолуния/полнолуния
   },
 
@@ -112,9 +114,9 @@ const CONFIG = {
 
   // Категории по итоговой оценке
   categories: [
-    { from: 72, label: 'отлично' },
-    { from: 58, label: 'хорошо' },
-    { from: 40, label: 'средне' },
+    { from: 78, label: 'отлично' },
+    { from: 62, label: 'хорошо' },
+    { from: 42, label: 'средне' },
     { from: 0,  label: 'слабо' },
   ],
 
