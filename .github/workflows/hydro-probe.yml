@@ -1,5 +1,5 @@
 # Разведка источников уровня воды (одноразовый, запуск руками).
-# Раунд 3: voda.gov.ru и tatarmeteo живы с раннера — смотрим сами страницы данных.
+# Раунд 4: полный текст страницы Нижнекамского вдхр на tatarmeteo — под парсер.
 name: hydro-probe
 
 on:
@@ -9,20 +9,25 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Скачать и показать структуру
+      - name: Текст страницы Нижнекамского вдхр
         run: |
-          probe() {
-            echo "===================== $1"
-            rm -f page.html
-            code=$(curl -skL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0" -o page.html -w "%{http_code}" "$1" || echo FAIL)
-            echo "HTTP $code, bytes: $(wc -c < page.html 2>/dev/null || echo 0)"
-            [ -s page.html ] || return 0
-            # контекст: гидро-термины
-            tr '<' '\n' < page.html | grep -iE 'нижнекамск|бьеф|приток|сброс|уровень воды|водохранилищ' | sed 's/^[a-zA-Z0-9 ="/_-]*>//' | head -60
-            echo "--- ссылки на бюллетени/обстановку:"
-            grep -oiE 'href="[^"]*"[^>]*>[^<]{0,60}(гидролог|уровен|обстановк|бюллетен|водохранилищ)[^<]{0,40}' page.html | head -15
-            grep -oE 'href="[^"]*(gidro|hydro|uroven|obstanovk|bulleten|vdhr|reservoir)[^"]*"' page.html | sort -u | head -15
-          }
-          probe "https://voda.gov.ru/activities/svedeniya-o-rezhimakh-raboty-krupneyshikh-vodokhranilishch-i-ikh-kaskadov/"
-          probe "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-kujbyishevskomu-vodoxranilishhu.html"
-          probe "https://www.tatarmeteo.ru/ru/gidrologiya/"
+          curl -skL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0" \
+            -o page.html "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-nizhnekamskomu-vodoxranilishhu.html"
+          echo "bytes: $(wc -c < page.html)"
+          # включаем таблицы: показываем маркеры ячеек, чтобы восстановить структуру
+          python3 - <<'PY'
+          import re
+          h = open('page.html', encoding='utf-8', errors='replace').read()
+          # вырезать скрипты/стили
+          h = re.sub(r'(?s)<(script|style)[^>]*>.*?</\1>', ' ', h)
+          # маркеры структуры таблиц
+          h = re.sub(r'(?i)<tr[^>]*>', '\n[TR] ', h)
+          h = re.sub(r'(?i)</t[dh]>', ' | ', h)
+          h = re.sub(r'(?i)<h(\d)[^>]*>', '\n[H] ', h)
+          txt = re.sub(r'<[^>]+>', ' ', h)
+          txt = re.sub(r'[ \t]+', ' ', txt)
+          lines = [l.strip() for l in txt.splitlines() if l.strip()]
+          # с начала содержательной части
+          for l in lines:
+              print(l[:400])
+          PY
