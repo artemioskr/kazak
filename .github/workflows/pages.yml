@@ -27,6 +27,10 @@ jobs:
           cp index.html _site/
           cp -r css js _site/
           touch _site/.nojekyll
+          # кэш-бастинг: Pages кэширует на 10 мин, без ?v= браузеры держат старые js/css
+          V="${GITHUB_SHA::7}"
+          sed -E -i "s|\"(css/[a-z-]+\.css)\"|\"\1?v=${V}\"|g; s|\"(js/[a-z-]+\.js)\"|\"\1?v=${V}\"|g" _site/index.html
+          grep -o 'js/app\.js[^"]*' _site/index.html
       - name: Опубликовать в gh-pages
         run: |
           cd _site
