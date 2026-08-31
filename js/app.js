@@ -15,6 +15,8 @@ const DOW = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
 const DOW_FULL = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
 const MONTH = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 const pad = n => String(n).padStart(2, '0');
+const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const todayKey = () => dateKey(new Date());
 
 // --- карта ---
 const map = L.map('map', { zoomControl: false, attributionControl: true })
@@ -135,10 +137,9 @@ async function load() {
   try {
     S.data = await Weather.fetch(S.lat, S.lon);
     compute();
-    // дни: только прогнозные (без past_days)
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    S.dayKeys = Object.keys(S.data.days).filter(k => new Date(k) >= today);
-    S.dayIdx = 0;
+    // дни: прошедшие (past_days) + прогнозные; по умолчанию выбран сегодняшний
+    S.dayKeys = Object.keys(S.data.days).sort();
+    S.dayIdx = Math.max(0, S.dayKeys.indexOf(todayKey()));
     S.hourIdx = null;
     status('');
     $('forecast').hidden = false;
@@ -166,17 +167,22 @@ function renderAll() { renderDays(); renderDay(); }
 function renderDays() {
   const nav = $('days');
   nav.innerHTML = '';
+  const tk = todayKey();
   S.dayKeys.forEach((key, idx) => {
     const d = new Date(key);
     const idxs = dayHours(key);
     const best = Math.max(...idxs.map(i => S.results[i].score));
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'day';
+    if (key < tk) b.classList.add('past');
     b.setAttribute('aria-current', idx === S.dayIdx ? 'true' : 'false');
     b.innerHTML = `<small>${DOW[d.getDay()]}</small><b>${d.getDate()}</b><span class="dot" style="background:${dotColor(best)}"></span>`;
     b.addEventListener('click', () => { S.dayIdx = idx; S.hourIdx = null; renderAll(); });
     nav.appendChild(b);
   });
+  // прокрутить ленту к выбранному дню (прошедшие уводят сегодня за левый край)
+  const cur = nav.querySelector('[aria-current="true"]');
+  if (cur) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
 }
 
 function dotColor(score) {
@@ -197,7 +203,8 @@ function renderDay() {
   $('day-title').textContent = `${DOW_FULL[d.getDay()]}, ${d.getDate()} ${MONTH[d.getMonth()]}`;
   const sr = dayInfo ? `${pad(dayInfo.sunrise.getHours())}:${pad(dayInfo.sunrise.getMinutes())}` : '—';
   const ss = dayInfo ? `${pad(dayInfo.sunset.getHours())}:${pad(dayInfo.sunset.getMinutes())}` : '—';
-  $('day-meta').textContent = `Солнце ${sr}–${ss}, ${Solunar.phaseName(d)}`;
+  $('day-meta').textContent = `Солнце ${sr}–${ss}, ${Solunar.phaseName(d)}` +
+    (key < todayKey() ? ' · прошедший день (факт погоды)' : '');
 
   const ban = $('ban');
   ban.hidden = !Scoring.inSpawningBan(d);

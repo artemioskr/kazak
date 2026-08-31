@@ -44,6 +44,8 @@ button, select { font: inherit; }
 .day b { display: block; color: var(--ink); font-weight: 500; font-size: 15px; }
 .day small { display: block; font-size: 12px; margin-top: 2px; }
 .day[aria-current="true"] { border-color: var(--amber); color: var(--ink); }
+.day.past { opacity: .55; }
+.day.past[aria-current="true"] { opacity: 1; border-color: var(--mute); }
 .day .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--silt); margin-top: 4px; }
 
 .day-head { padding: 0 16px; }
