@@ -10,7 +10,7 @@ const Weather = {
       ].join(','),
       daily: 'sunrise,sunset',
       timezone: 'auto',
-      past_days: 2,
+      past_days: 7,   // архив: тренд давления (2 суток) + разгон модели температуры воды
       forecast_days: 7,
       wind_speed_unit: 'ms',
     });
@@ -39,6 +39,6 @@ const Weather = {
     j.daily.time.forEach((d, i) => {
       days[d] = { sunrise: new Date(j.daily.sunrise[i]), sunset: new Date(j.daily.sunset[i]) };
     });
-    return { hours, days, timezone: j.timezone, elevation: j.elevation, pastDays: 2 };
+    return { hours, days, timezone: j.timezone, elevation: j.elevation, pastDays: 7 };
   },
 };

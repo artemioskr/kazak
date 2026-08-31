@@ -15,8 +15,14 @@ const Scoring = {
     if (h.temp >= sp.tempAir.hotFrom) add('Жара', sp.tempAir.hotPenalty, `${h.temp.toFixed(0)}°, рыба вялая`);
     else if (h.temp < 3 && sp.tempAir.cold) add('Холод', sp.tempAir.cold, `${h.temp.toFixed(0)}°`);
 
+    // 2б. Температура воды (модель v0, если посчитана)
+    if (data.waterTemp && sp.waterOpt) this.waterTemp(i, data, sp, add);
+
     // 3. Тренд давления
     this.pressure(i, data, sp, add);
+
+    // 3б. Фронт: скачок давления + разворот ветра / скачок T
+    this.front(i, data, sp, add);
 
     // 4. Ветер
     this.wind(h, sp, add);
@@ -44,6 +50,13 @@ const Scoring = {
     const R = CONFIG.precipitation;
     if (h.precip >= R.heavyFrom) add('Ливень', R.weights.heavy, `${h.precip} мм/ч, муть и шум`);
     else if (h.precip > 0.1 && h.precip <= R.lightMax) add('Дождик', R.weights.light, `${h.precip} мм/ч`);
+
+    // 6б. Kp-индекс (если данные загрузились; нет данных — фактор выключен)
+    if (typeof Kp !== 'undefined' && Kp.ready) {
+      const kp = Kp.at(h.time);
+      if (kp !== null && kp >= CONFIG.kp.stormFrom)
+        add('Магнитная буря', CONFIG.kp.weights.storm, `Kp ${kp.toFixed(0)}`);
+    }
 
     // 7. Солунар
     const S = CONFIG.solunar;
@@ -74,6 +87,46 @@ const Scoring = {
       const d24 = h.pressure - p24.pressure;
       if (Math.abs(d24) > P.day24Bad) add('Нестабильные сутки', W.day24 * k, `${d24 > 0 ? '+' : ''}${d24.toFixed(1)} гПа за 24 ч`);
     }
+  },
+
+  // Температура воды против оптимума вида. Границы мягкие: nearBand — переходная зона.
+  waterTemp(i, data, sp, add) {
+    const W = CONFIG.waterTemp;
+    const t = data.waterTemp[i];
+    const [lo, hi] = sp.waterOpt;
+    const txt = `вода ~${t.toFixed(0)}°, оптимум ${lo}–${hi}°`;
+    if (t >= lo && t <= hi) add('Вода в оптимуме', W.weights.opt, txt);
+    else {
+      const dist = t < lo ? lo - t : t - hi;
+      if (dist > W.nearBand) add(t < lo ? 'Вода холодная' : 'Вода тёплая', W.weights.off, txt);
+      else if (W.weights.near) add('Вода на грани оптимума', W.weights.near, txt);
+    }
+  },
+
+  // Часы прохождения фронта: |ΔP| за окно >= pressureJump И (разворот ветра ИЛИ скачок T).
+  // Кэш на объекте данных — прогноз один на все виды.
+  detectFronts(data) {
+    if (data._fronts) return data._fronts;
+    const F = CONFIG.front, w = F.window;
+    data._fronts = data.hours.map((h, i) => {
+      const p = data.hours[i - w];
+      if (!p) return false;
+      if (Math.abs(h.pressure - p.pressure) < F.pressureJump) return false;
+      let turn = Math.abs(h.windDir - p.windDir) % 360;
+      if (turn > 180) turn = 360 - turn;
+      return turn >= F.windTurn || Math.abs(h.temp - p.temp) >= F.tempJump;
+    });
+    return data._fronts;
+  },
+
+  front(i, data, sp, add) {
+    const F = CONFIG.front, k = sp.pressure;
+    const fronts = this.detectFronts(data);
+    if (fronts[i]) { add('Фронт проходит', F.weights.during * k, 'смена давления с разворотом ветра или скачком T'); return; }
+    for (let d = 1; d <= F.horizonBefore; d++)
+      if (fronts[i + d]) { add('Перед фронтом', F.weights.before * k, `фронт через ~${d} ч, окно активности`); return; }
+    for (let d = 1; d <= F.afterHours; d++)
+      if (fronts[i - d]) { add('После фронта', F.weights.after * k, `фронт прошёл ~${d} ч назад`); return; }
   },
 
   wind(h, sp, add) {

@@ -29,6 +29,11 @@ button, select { font: inherit; }
 .point-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: var(--mute); }
 .point-row button, .status button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
 
+.controls-row { display: flex; gap: 8px; align-items: center; padding: 0 16px 10px; }
+.controls-row select { flex: 1 1 0; min-width: 0; background: var(--deep); color: var(--ink); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 8px; font-size: 14px; }
+.controls-row button { flex: 0 0 auto; background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.controls-row button[hidden] { display: none; }
+
 .status { margin: 0 16px 12px; padding: 12px 14px; background: var(--deep); border-radius: 8px; font-size: 14px; color: var(--mute); }
 .status.error { color: #f3b7a5; }
 
@@ -75,6 +80,20 @@ button, select { font: inherit; }
 .factors .d.plus { color: var(--amber); }
 .factors .d.minus { color: #d97b6a; }
 .factors .t { color: var(--mute); font-size: 13px; }
+
+.hour-head #log-add { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+
+/* журнал рыбалок */
+.journal { margin-top: 20px; padding: 0 16px; }
+.j-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+.j-head button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+#journal { list-style: none; margin: 0; padding: 0; }
+#journal li { border-top: 1px solid var(--ridge); padding: 8px 0; font-size: 14px; }
+.j-row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.j-row b { font-weight: 500; }
+.j-cmp { color: var(--mute); margin-left: auto; }
+.j-del { background: transparent; border: 0; color: var(--mute); cursor: pointer; padding: 0 4px; }
+.j-note { color: var(--mute); font-size: 13px; margin-top: 2px; }
 
 .foot { padding: 24px 16px 20px; font-size: 12px; color: var(--mute); }
 

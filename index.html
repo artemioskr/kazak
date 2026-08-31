@@ -27,6 +27,13 @@
   <button id="locate" type="button">Где я</button>
 </div>
 
+<div class="controls-row">
+  <select id="points" aria-label="Сохранённые точки"></select>
+  <button id="save-point" type="button" title="Сохранить текущую точку">★</button>
+  <button id="del-point" type="button" title="Удалить выбранную точку">✕</button>
+  <select id="waterbody" aria-label="Тип водоёма"></select>
+</div>
+
 <section id="status" class="status" hidden></section>
 
 <section id="forecast" hidden>
@@ -46,10 +53,19 @@
 
   <div class="hour-head">
     <div class="hour-time" id="hour-time"></div>
+    <button id="log-add" type="button" title="Записать этот час в журнал">+ в журнал</button>
     <div class="hour-score" id="hour-score"></div>
   </div>
   <div class="hour-weather" id="hour-weather"></div>
   <ul class="factors" id="factors"></ul>
+</section>
+
+<section class="journal" id="journal-sec" hidden>
+  <div class="j-head">
+    <b>Журнал рыбалок</b>
+    <button id="log-export" type="button">Экспорт JSON</button>
+  </div>
+  <ul id="journal"></ul>
 </section>
 
 <footer class="foot">
@@ -61,6 +77,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/weather.js"></script>
+<script src="js/watertemp.js"></script>
+<script src="js/kp.js"></script>
 <script src="js/solunar.js"></script>
 <script src="js/scoring.js"></script>
 <script src="js/app.js"></script>
