@@ -1,0 +1,28 @@
+# Разведка источников уровня воды (одноразовый, запуск руками).
+# Качает страницы гидрообстановки и печатает в лог контекст вокруг «Нижнекамск» —
+# по логу пишем парсер для ежедневного крона.
+name: hydro-probe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачать и показать структуру
+        run: |
+          probe() {
+            echo "===================== $1"
+            code=$(curl -sL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64)" -o page.html -w "%{http_code}" "$1" || echo FAIL)
+            echo "HTTP $code, bytes: $(wc -c < page.html 2>/dev/null || echo 0)"
+            # контекст вокруг Нижнекамской и гидро-терминов (в т.ч. в однострочном HTML)
+            tr '<' '\n' < page.html | grep -inE 'нижнекамск|бьеф|приток|сброс|уровень' | head -60 || echo "-- совпадений нет --"
+            # ссылки на json/api внутри страницы
+            grep -oE '(https?:)?//[^"'\'' ]*(json|api|informer|hydrology)[^"'\'' ]*' page.html | sort -u | head -20 || true
+          }
+          probe "https://www.rushydro.ru/informer/"
+          probe "https://www.rushydro.ru/hydrology/informer/"
+          probe "https://www.rushydro.ru/operation/hydrology/"
+          probe "https://allrivers.info/gauge/kama-krasnyj-klyuch"
+          probe "https://allrivers.info/water/kama"
