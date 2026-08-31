@@ -1,6 +1,6 @@
 # Разведка источников уровня воды (одноразовый, запуск руками).
-# Качает страницы гидрообстановки и печатает в лог контекст вокруг «Нижнекамск» —
-# по логу пишем парсер для ежедневного крона.
+# Раунд 2: РусГидро гео-блочит зарубежные IP, посты Камы на allrivers мертвы с мая 2024.
+# Пробуем Камское БВУ, Росводресурсы, Татарметео, Удмуртский ЦГМС, АИС ГМВО.
 name: hydro-probe
 
 on:
@@ -14,15 +14,19 @@ jobs:
         run: |
           probe() {
             echo "===================== $1"
-            code=$(curl -sL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64)" -o page.html -w "%{http_code}" "$1" || echo FAIL)
+            rm -f page.html
+            code=$(curl -skL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0" -o page.html -w "%{http_code}" "$1" || echo FAIL)
             echo "HTTP $code, bytes: $(wc -c < page.html 2>/dev/null || echo 0)"
-            # контекст вокруг Нижнекамской и гидро-терминов (в т.ч. в однострочном HTML)
-            tr '<' '\n' < page.html | grep -inE 'нижнекамск|бьеф|приток|сброс|уровень' | head -60 || echo "-- совпадений нет --"
-            # ссылки на json/api внутри страницы
-            grep -oE '(https?:)?//[^"'\'' ]*(json|api|informer|hydrology)[^"'\'' ]*' page.html | sort -u | head -20 || true
+            [ -s page.html ] || return 0
+            # контекст: гидро-термины
+            tr '<' '\n' < page.html | grep -iE 'нижнекамск|бьеф|приток|сброс|уровень воды|водохранилищ' | sed 's/^[a-zA-Z0-9 ="/_-]*>//' | head -30
+            echo "--- ссылки на бюллетени/обстановку:"
+            grep -oiE 'href="[^"]*"[^>]*>[^<]{0,60}(гидролог|уровен|обстановк|бюллетен|водохранилищ)[^<]{0,40}' page.html | head -15
+            grep -oE 'href="[^"]*(gidro|hydro|uroven|obstanovk|bulleten|vdhr|reservoir)[^"]*"' page.html | sort -u | head -15
           }
-          probe "https://www.rushydro.ru/informer/"
-          probe "https://www.rushydro.ru/hydrology/informer/"
-          probe "https://www.rushydro.ru/operation/hydrology/"
-          probe "https://allrivers.info/gauge/kama-krasnyj-klyuch"
-          probe "https://allrivers.info/water/kama"
+          probe "http://www.kamabvu.ru/"
+          probe "https://voda.gov.ru/"
+          probe "https://voda.gov.ru/press_center/situation/"
+          probe "https://tatarmeteo.ru/"
+          probe "https://www.udmpogoda.ru/"
+          probe "http://gmvo.skniivh.ru/"
