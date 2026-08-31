@@ -1,6 +1,5 @@
 # Разведка источников уровня воды (одноразовый, запуск руками).
-# Раунд 2: РусГидро гео-блочит зарубежные IP, посты Камы на allrivers мертвы с мая 2024.
-# Пробуем Камское БВУ, Росводресурсы, Татарметео, Удмуртский ЦГМС, АИС ГМВО.
+# Раунд 3: voda.gov.ru и tatarmeteo живы с раннера — смотрим сами страницы данных.
 name: hydro-probe
 
 on:
@@ -19,14 +18,11 @@ jobs:
             echo "HTTP $code, bytes: $(wc -c < page.html 2>/dev/null || echo 0)"
             [ -s page.html ] || return 0
             # контекст: гидро-термины
-            tr '<' '\n' < page.html | grep -iE 'нижнекамск|бьеф|приток|сброс|уровень воды|водохранилищ' | sed 's/^[a-zA-Z0-9 ="/_-]*>//' | head -30
+            tr '<' '\n' < page.html | grep -iE 'нижнекамск|бьеф|приток|сброс|уровень воды|водохранилищ' | sed 's/^[a-zA-Z0-9 ="/_-]*>//' | head -60
             echo "--- ссылки на бюллетени/обстановку:"
             grep -oiE 'href="[^"]*"[^>]*>[^<]{0,60}(гидролог|уровен|обстановк|бюллетен|водохранилищ)[^<]{0,40}' page.html | head -15
             grep -oE 'href="[^"]*(gidro|hydro|uroven|obstanovk|bulleten|vdhr|reservoir)[^"]*"' page.html | sort -u | head -15
           }
-          probe "http://www.kamabvu.ru/"
-          probe "https://voda.gov.ru/"
-          probe "https://voda.gov.ru/press_center/situation/"
-          probe "https://tatarmeteo.ru/"
-          probe "https://www.udmpogoda.ru/"
-          probe "http://gmvo.skniivh.ru/"
+          probe "https://voda.gov.ru/activities/svedeniya-o-rezhimakh-raboty-krupneyshikh-vodokhranilishch-i-ikh-kaskadov/"
+          probe "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-kujbyishevskomu-vodoxranilishhu.html"
+          probe "https://www.tatarmeteo.ru/ru/gidrologiya/"
