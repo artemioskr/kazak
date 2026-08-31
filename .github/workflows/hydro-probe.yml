@@ -1,5 +1,5 @@
 # Разведка источников уровня воды (одноразовый, запуск руками).
-# Раунд 4: полный текст страницы Нижнекамского вдхр на tatarmeteo — под парсер.
+# Раунд 5: таблица на tatarmeteo пуста в HTML — ищем iframe/AJAX-эндпоинт данных.
 name: hydro-probe
 
 on:
@@ -9,25 +9,22 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Текст страницы Нижнекамского вдхр
+      - name: Найти источник данных таблицы
         run: |
-          curl -skL -m 30 -A "Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0" \
-            -o page.html "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-nizhnekamskomu-vodoxranilishhu.html"
-          echo "bytes: $(wc -c < page.html)"
-          # включаем таблицы: показываем маркеры ячеек, чтобы восстановить структуру
+          UA="Mozilla/5.0 (X11; Linux x86_64) Firefox/128.0"
+          curl -skL -m 30 -A "$UA" -o page.html \
+            "https://www.tatarmeteo.ru/ru/gidrologiya/dannyie-po-nizhnekamskomu-vodoxranilishhu.html"
+          echo "== iframe / script src / все URL в странице:"
+          grep -oiE '<iframe[^>]*>' page.html || true
+          grep -oiE '<script[^>]*src="[^"]*"' page.html || true
+          grep -oE '(https?:)?//[a-zA-Z0-9./_-]+' page.html | sort -u | grep -viE 'w3.org|fonts|jquery|bootstrap|yandex|google|vk.com|schema' | head -30
+          grep -oE '"[^"]*\.(php|json|xml|csv)[^"]*"' page.html | sort -u | head -20
+          echo "== inline-скрипты (без библиотек):"
           python3 - <<'PY'
           import re
           h = open('page.html', encoding='utf-8', errors='replace').read()
-          # вырезать скрипты/стили
-          h = re.sub(r'(?s)<(script|style)[^>]*>.*?</\1>', ' ', h)
-          # маркеры структуры таблиц
-          h = re.sub(r'(?i)<tr[^>]*>', '\n[TR] ', h)
-          h = re.sub(r'(?i)</t[dh]>', ' | ', h)
-          h = re.sub(r'(?i)<h(\d)[^>]*>', '\n[H] ', h)
-          txt = re.sub(r'<[^>]+>', ' ', h)
-          txt = re.sub(r'[ \t]+', ' ', txt)
-          lines = [l.strip() for l in txt.splitlines() if l.strip()]
-          # с начала содержательной части
-          for l in lines:
-              print(l[:400])
+          for m in re.finditer(r'(?s)<script(?![^>]*src)[^>]*>(.*?)</script>', h):
+              s = m.group(1).strip()
+              if s and len(s) < 3000:
+                  print('---'); print(s[:1500])
           PY
