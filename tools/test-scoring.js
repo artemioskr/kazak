@@ -123,6 +123,17 @@ t('то же падение без разворота ветра и без ск�
   assert(!fronts.some(Boolean), 'фронт не должен детектиться без второго признака');
 });
 
+t('порывы при умеренном среднем ветре — штраф, ровный тот же ветер — бонус', () => {
+  const data = mkData('2026-07-14T00:00', 30, hs => {
+    hs.forEach((h, i) => { h.wind = 5; h.gust = i < 15 ? 7 : 13; }); // до 15:00 ровно, потом рвёт
+  });
+  const smooth = score(10, data, 'zander');
+  assert(smooth.factors.some(f => f.name === 'Ветер в меру' && f.delta > 0), JSON.stringify(smooth.factors));
+  const gusty = score(20, data, 'zander');
+  assert(gusty.factors.some(f => f.name === 'Порывистый ветер' && f.delta < 0), JSON.stringify(gusty.factors));
+  assert(!gusty.factors.some(f => f.name === 'Ветер в меру'), 'бонус «в меру» не должен складываться с порывами');
+});
+
 console.log('— температура воды —');
 t('при постоянном воздухе вода сходится к температуре воздуха', () => {
   const hours = Array.from({ length: 24 * 40 }, () => ({ temp: 20 }));

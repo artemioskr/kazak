@@ -1,7 +1,7 @@
 // Вся настройка модели живёт здесь. В коде скоринга — только формулы.
 // Версия конфига нужна для будущей калибровки по журналу.
 const CONFIG = {
-  version: '0.2.0',
+  version: '0.2.1',
   baseline: 42,
 
   // Профили видов. multiplier — насколько сильно фактор влияет на этот вид.
@@ -113,9 +113,11 @@ const CONFIG = {
   wind: {
     calmMax: 1.0,
     goodMin: 2, goodMax: 6,
+    gustyFrom: 11,          // порывы: рваный ветер строит крутую волну и при среднем 5-6
+                            // (урок 29.08: средний 6, порывы 13 — «большие волны» по факту)
     strongFrom: 9,
     stormFrom: 13,
-    weights: { calm: -4, good: 6, moderate: 0, strong: -12, storm: -25 },
+    weights: { calm: -4, good: 6, moderate: 0, gusty: -5, strong: -12, storm: -25 },
     calmSummerOnly: true,   // штиль штрафуем только в тёплый сезон (июн–авг)
   },
 

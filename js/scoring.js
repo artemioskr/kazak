@@ -134,6 +134,7 @@ const Scoring = {
     const summer = [5, 6, 7].includes(h.time.getMonth());
     if (v >= W.stormFrom) add('Шторм', w.storm * k, `${v.toFixed(0)} м/с, порывы ${h.gust.toFixed(0)}`);
     else if (v >= W.strongFrom) add('Сильный ветер', w.strong * k, `${v.toFixed(0)} м/с, порывы ${h.gust.toFixed(0)}`);
+    else if (h.gust >= W.gustyFrom) add('Порывистый ветер', w.gusty * k, `${v.toFixed(1)} м/с с порывами ${h.gust.toFixed(0)}, крутая волна`);
     else if (v >= W.goodMin && v <= W.goodMax) add('Ветер в меру', w.good * k, `${v.toFixed(1)} м/с, рябь`);
     else if (v <= W.calmMax && (!W.calmSummerOnly || summer)) add('Штиль', w.calm * k, 'зеркало, рыба осторожна');
   },
