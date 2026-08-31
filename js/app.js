@@ -3,6 +3,7 @@ const S = {
   lat: null, lon: null,
   species: 'zander',
   waterbody: CONFIG.waterTemp.default,
+  daypart: 'all',    // часы планируемой рыбалки: по ним цвет точки дня и лучший час
   data: null,        // из Weather.fetch
   results: [],       // Scoring.hour для каждого часа data.hours
   dayKeys: [],       // 'YYYY-MM-DD' для прогнозных дней
@@ -73,6 +74,35 @@ wbSel.addEventListener('change', () => {
   localStorage.setItem('fishcast.waterbody', S.waterbody);
   if (S.data) { compute(); renderAll(); }
 });
+
+// --- часы рыбалки ---
+const DAYPARTS = [
+  { key: 'all', label: 'Весь день', test: () => true },
+  { key: 'morning', label: 'Утро', test: h => h >= 4 && h < 10 },
+  { key: 'day', label: 'День', test: h => h >= 10 && h < 16 },
+  { key: 'evening', label: 'Вечер', test: h => h >= 16 && h < 22 },
+  { key: 'night', label: 'Ночь', test: h => h >= 22 || h < 4 },
+];
+S.daypart = localStorage.getItem('fishcast.daypart') || S.daypart;
+if (!DAYPARTS.some(d => d.key === S.daypart)) S.daypart = 'all';
+const daypartTest = () => DAYPARTS.find(d => d.key === S.daypart).test;
+
+function renderDayparts() {
+  const nav = $('dayparts');
+  nav.innerHTML = '';
+  DAYPARTS.forEach(d => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'dp'; b.textContent = d.label;
+    b.setAttribute('aria-pressed', d.key === S.daypart ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      S.daypart = d.key;
+      localStorage.setItem('fishcast.daypart', d.key);
+      S.hourIdx = null;
+      renderAll();
+    });
+    nav.appendChild(b);
+  });
+}
 
 // --- сохранённые точки ---
 const Points = {
@@ -162,16 +192,18 @@ function dayHours(key) {
 }
 
 // --- отрисовка ---
-function renderAll() { renderDays(); renderDay(); }
+function renderAll() { renderDayparts(); renderDays(); renderDay(); }
 
 function renderDays() {
   const nav = $('days');
   nav.innerHTML = '';
   const tk = todayKey();
+  const test = daypartTest();
   S.dayKeys.forEach((key, idx) => {
     const d = new Date(key);
     const idxs = dayHours(key);
-    const best = Math.max(...idxs.map(i => S.results[i].score));
+    const inRange = idxs.filter(i => test(S.data.hours[i].time.getHours()));
+    const best = Math.max(...(inRange.length ? inRange : idxs).map(i => S.results[i].score));
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'day';
     if (key < tk) b.classList.add('past');
@@ -223,11 +255,13 @@ function renderDay() {
   // столбики
   const bars = $('bars');
   bars.innerHTML = '';
+  const test = daypartTest();
   idxs.forEach((i, hour) => {
     const r = S.results[i];
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'bar'; b.setAttribute('role', 'listitem');
     b.dataset.cat = r.category;
+    if (!test(hour)) b.classList.add('off'); // вне выбранных часов рыбалки
     if (r.period) b.classList.add(r.period.type);
     b.title = `${pad(hour)}:00 — ${r.score}`;
     b.setAttribute('aria-label', `${pad(hour)}:00, оценка ${r.score}, ${r.category}`);
@@ -236,9 +270,10 @@ function renderDay() {
     bars.appendChild(b);
   });
 
-  // час по умолчанию: лучший в дне
+  // час по умолчанию: лучший среди выбранных часов рыбалки (иначе — по всему дню)
   if (S.hourIdx === null || !idxs.includes(S.hourIdx)) {
-    S.hourIdx = idxs[dayRes.indexOf(dayRes.reduce((a, b) => (b.score > a.score ? b : a)))];
+    const pool = idxs.filter(i => test(S.data.hours[i].time.getHours()));
+    S.hourIdx = (pool.length ? pool : idxs).reduce((a, b) => (S.results[b].score > S.results[a].score ? b : a));
   }
   renderHour();
   markBar();
@@ -361,6 +396,40 @@ function renderJournal() {
     ul.appendChild(li);
   });
 }
+
+// --- резервная копия: до появления аккаунтов данные живут только в localStorage ---
+const BACKUP_KEYS = ['fishcast.point', 'fishcast.points', 'fishcast.species',
+  'fishcast.waterbody', 'fishcast.journal', 'fishcast.daypart'];
+
+$('backup-save').addEventListener('click', () => {
+  const data = {};
+  for (const k of BACKUP_KEYS) { const v = localStorage.getItem(k); if (v !== null) data[k] = v; }
+  const blob = new Blob(
+    [JSON.stringify({ app: 'fishcast', version: CONFIG.version, saved: new Date().toISOString(), data }, null, 2)],
+    { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `fishcast-backup-${dateKey(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+$('backup-load').addEventListener('click', () => $('backup-file').click());
+$('backup-file').addEventListener('change', async () => {
+  const f = $('backup-file').files[0];
+  $('backup-file').value = '';
+  if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (j.app !== 'fishcast' || !j.data) throw new Error('это не копия FishCast');
+    if (!confirm('Заменить текущие точки, журнал и настройки данными из файла?')) return;
+    for (const [k, v] of Object.entries(j.data))
+      if (BACKUP_KEYS.includes(k) && typeof v === 'string') localStorage.setItem(k, v);
+    location.reload();
+  } catch (e) {
+    alert('Не удалось восстановить: ' + e.message);
+  }
+});
 
 // --- старт ---
 (function init() {

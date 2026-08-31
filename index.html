@@ -39,6 +39,9 @@
 <section id="forecast" hidden>
   <nav class="days" id="days" aria-label="Дни"></nav>
 
+  <!-- часы планируемой рыбалки: цвет точки дня и лучший час считаются по этому отрезку -->
+  <nav class="dayparts" id="dayparts" aria-label="Часы рыбалки"></nav>
+
   <div class="day-head">
     <div class="day-title" id="day-title"></div>
     <div class="day-meta" id="day-meta"></div>
@@ -71,6 +74,11 @@
 </section>
 
 <footer class="foot">
+  <div class="backup">
+    <button id="backup-save" type="button">Скачать копию данных</button>
+    <button id="backup-load" type="button">Восстановить из файла</button>
+    <input type="file" id="backup-file" accept="application/json" hidden>
+  </div>
   Оценка — вероятность активности, не гарантия клёва. Погода: Open-Meteo. Луна: SunCalc.
   Модель <span id="cfg-version"></span>.
 </footer>

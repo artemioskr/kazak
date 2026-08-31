@@ -48,6 +48,12 @@ button, select { font: inherit; }
 .day.past[aria-current="true"] { opacity: 1; border-color: var(--mute); }
 .day .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--silt); margin-top: 4px; }
 
+/* часы рыбалки */
+.dayparts { display: flex; gap: 6px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
+.dayparts::-webkit-scrollbar { display: none; }
+.dp { flex: 0 0 auto; background: transparent; border: 1px solid var(--ridge); color: var(--mute); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.dp[aria-pressed="true"] { border-color: var(--amber); color: var(--ink); }
+
 .day-head { padding: 0 16px; }
 .day-title { font-size: 18px; font-weight: 500; }
 .day-meta { font-size: 13px; color: var(--mute); margin-top: 2px; }
@@ -73,6 +79,7 @@ button, select { font: inherit; }
 .bar.major::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); border-radius: 2px; }
 .bar.minor::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); opacity: .45; border-radius: 2px; }
 .bar[aria-current="true"] i { outline: 2px solid var(--ink); outline-offset: 0; }
+.bar.off i { opacity: .3; }
 .bars-axis { display: flex; justify-content: space-between; padding: 10px 16px 0; font-size: 12px; color: var(--mute); }
 
 .hour-head { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 2px; }
@@ -103,6 +110,8 @@ button, select { font: inherit; }
 .j-note { color: var(--mute); font-size: 13px; margin-top: 2px; }
 
 .foot { padding: 24px 16px 20px; font-size: 12px; color: var(--mute); }
+.backup { display: flex; gap: 8px; margin-bottom: 12px; }
+.backup button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
 @media (min-width: 720px) {
