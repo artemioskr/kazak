@@ -19,6 +19,8 @@ try {
 function route(string $method, string $path): never {
     match (true) {
         $method === 'GET' && $path === '/health' => health(),
+        $method === 'POST' && $path === '/auth/register' => auth_register(),
+        $method === 'POST' && $path === '/auth/login' => auth_login(),
         $method === 'POST' && $path === '/auth/telegram' => auth_telegram(),
         $method === 'GET' && $path === '/state' => state_get(),
         $method === 'PUT' && $path === '/state' => state_put(),
@@ -34,7 +36,45 @@ function health(): never {
     json_out(['ok' => true, 'db' => $dbOk, 'version' => APP_VERSION]);
 }
 
+// Логин + пароль — без внешних сервисов (Telegram в РФ заблокирован, SMS дорого).
+function auth_credentials(): array {
+    $b = read_json_body();
+    $login = mb_strtolower(trim((string)($b['login'] ?? '')));
+    $pass = (string)($b['password'] ?? '');
+    if (!preg_match('/^[a-z0-9@._-]{3,64}$/', $login))
+        fail('логин: 3-64 символа, латиница/цифры/@._-');
+    if (mb_strlen($pass) < 8) fail('пароль: минимум 8 символов');
+    return [$login, $pass];
+}
+
+function auth_register(): never {
+    [$login, $pass] = auth_credentials();
+    $hash = password_hash($pass, PASSWORD_DEFAULT);
+    try {
+        $st = db()->prepare('INSERT INTO users (login, pass_hash) VALUES (:l, :h) RETURNING id');
+        $st->execute([':l' => $login, ':h' => $hash]);
+    } catch (PDOException $e) {
+        if (str_contains($e->getMessage(), 'users_login_key')) fail('такой логин уже занят', 409);
+        throw $e;
+    }
+    json_out(['token' => token_issue((int)$st->fetchColumn()), 'name' => $login]);
+}
+
+function auth_login(): never {
+    [$login, $pass] = auth_credentials();
+    $st = db()->prepare('SELECT id, pass_hash FROM users WHERE login = :l');
+    $st->execute([':l' => $login]);
+    $row = $st->fetch();
+    usleep(300_000); // притормаживаем перебор
+    if (!$row || !$row['pass_hash'] || !password_verify($pass, $row['pass_hash'])) {
+        fail('неверный логин или пароль', 403);
+    }
+    db()->prepare('UPDATE users SET last_seen = now() WHERE id = :id')->execute([':id' => $row['id']]);
+    json_out(['token' => token_issue((int)$row['id']), 'name' => $login]);
+}
+
 // Вход через Telegram Login Widget: браузер шлёт поля виджета как есть.
+// Задел на будущее (телеграм-бот из плана); в UI не используется — Telegram в РФ заблокирован.
 function auth_telegram(): never {
     $fields = read_json_body();
     $tg = telegram_verify($fields);

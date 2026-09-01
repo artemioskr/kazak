@@ -3,7 +3,9 @@
 
 CREATE TABLE IF NOT EXISTS users (
     id         bigserial PRIMARY KEY,
-    tg_id      bigint UNIQUE NOT NULL,          -- id из Telegram Login
+    login      text UNIQUE,                     -- основной вход: логин + пароль
+    pass_hash  text,
+    tg_id      bigint UNIQUE,                   -- запас на будущее (телеграм-бот)
     name       text NOT NULL DEFAULT '',
     username   text NOT NULL DEFAULT '',
     created_at timestamptz NOT NULL DEFAULT now(),

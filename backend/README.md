@@ -9,26 +9,26 @@ PHP 8.3 (без фреймворка и composer — ноль зависимос
 
 1. Купи VPS (Timeweb Cloud / Beget, 1 vCPU / 2 ГБ, локация РФ) и домен,
    направь A-запись домена на IP VPS.
-2. Создай бота у @BotFather (для входа через Telegram), командой
-   `/setdomain` привяжи свой домен.
-3. На VPS:
+2. На VPS:
 
        git clone https://github.com/artemioskr/kazak.git
        cd kazak/backend
        sudo bash install.sh          # создаст .env и попросит его заполнить
-       nano .env                     # APP_DOMAIN=твой.домен, TELEGRAM_BOT_TOKEN=...
+       nano .env                     # APP_DOMAIN=твой.домен
        sudo bash install.sh          # соберёт, запустит, применит миграции
 
-4. Проверка: `https://твой.домен/api/health` → `{"ok":true,"db":true}`.
+3. Проверка: `https://твой.домен/api/health` → `{"ok":true,"db":true}`.
    Фронтенд открывается прямо на домене (Caddy раздаёт корень репозитория).
-5. Чтобы фронт на GitHub Pages ходил в этот API: в `js/config.js` пропиши
+4. Чтобы фронт на GitHub Pages ходил в этот API: в `js/config.js` пропиши
    `apiBase: 'https://твой.домен'` (Pages-домен уже разрешён в CORS_ORIGINS).
 
 ## Что внутри
 
 - `public/index.php` — все маршруты API:
   - `GET  /api/health` — живость;
-  - `POST /api/auth/telegram` — вход (проверка подписи Telegram Login Widget), выдаёт токен;
+  - `POST /api/auth/register`, `POST /api/auth/login` — аккаунт по логину и паролю
+    (Argon2/bcrypt через password_hash; без внешних сервисов — Telegram в РФ заблокирован);
+  - `POST /api/auth/telegram` — задел на будущее для телеграм-бота (в UI не используется);
   - `GET/PUT /api/state` — синк точек и журнала (последняя запись побеждает);
   - `GET  /api/weather?lat=&lon=` — кэширующий прокси Open-Meteo (TTL 30 мин);
   - `GET  /api/hydro` — уровни/сброс Нижнекамской по дням.

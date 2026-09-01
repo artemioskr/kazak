@@ -79,12 +79,13 @@ informer и Татэнерго парсятся тривиально. До бэ�
 ## Бэкенд (backend/)
 Написан, ждёт развёртывания на VPS с российским IP (см. backend/README.md).
 Чистый PHP 8.3 без composer, PostgreSQL 16, Caddy (авто-HTTPS, раздаёт и фронт),
-docker compose, install.sh. API: /api/health, /api/auth/telegram (Telegram Login),
-/api/state (синк точек+журнала, last-write-wins), /api/weather (кэш-прокси
-Open-Meteo, TTL 30 мин), /api/hydro. Крон-парсер РусГидро — эвристика, доводить
-по /tmp/hydro-raw.html после первого запуска на VPS. Фронт: CONFIG.apiBase и
-CONFIG.telegramBot (null = всё локально), js/api.js, синк с дебаунсом 2 с,
-кнопка входа в футере появляется только при живом health.
+docker compose, install.sh. API: /api/health, /api/auth/register + /api/auth/login
+(логин/пароль, password_hash; Telegram-вход не используем — заблокирован в РФ,
+эндпоинт /api/auth/telegram оставлен как задел под бота), /api/state (синк
+точек+журнала, last-write-wins), /api/weather (кэш-прокси Open-Meteo, TTL 30 мин),
+/api/hydro. Крон-парсер РусГидро — эвристика, доводить по /tmp/hydro-raw.html
+после первого запуска на VPS. Фронт: CONFIG.apiBase (null = всё локально),
+js/api.js, форма входа в футере при живом health, синк с дебаунсом 2 с.
 
 ## Следующие шаги (в порядке приоритета)
 1. Накопить записи в журнале за сезон — без них калибровать нечего.

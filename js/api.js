@@ -24,12 +24,20 @@ const Api = {
     if (this.token) headers.Authorization = 'Bearer ' + this.token;
     const r = await fetch(this.base + path, Object.assign({}, opts, { headers }));
     if (r.status === 401) { this.logout(); throw new Error('сессия истекла, войди заново'); }
-    if (!r.ok) throw new Error('API ответил ' + r.status);
+    if (!r.ok) {
+      let msg = 'API ответил ' + r.status;
+      try { msg = (await r.json()).error || msg; } catch (_) {}
+      throw new Error(msg);
+    }
     return r.json();
   },
 
-  async loginTelegram(widgetUser) {
-    const j = await this.call('/api/auth/telegram', { method: 'POST', body: JSON.stringify(widgetUser) });
+  // action: 'login' или 'register'
+  async auth(action, login, password) {
+    const j = await this.call('/api/auth/' + action, {
+      method: 'POST',
+      body: JSON.stringify({ login, password }),
+    });
     this.token = j.token;
     localStorage.setItem('fishcast.token', j.token);
     localStorage.setItem('fishcast.user', j.name);

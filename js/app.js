@@ -444,26 +444,32 @@ function renderAuth() {
     el.innerHTML = `<span>Синхронизация включена${name ? ': ' + name : ''}</span> ` +
       `<button id="logout" type="button">Выйти</button>`;
     $('logout').addEventListener('click', () => { Api.logout(); renderAuth(); });
-  } else if (CONFIG.telegramBot) {
-    const s = document.createElement('script');
-    s.src = 'https://telegram.org/js/telegram-widget.js?22';
-    s.setAttribute('data-telegram-login', CONFIG.telegramBot);
-    s.setAttribute('data-size', 'medium');
-    s.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    el.appendChild(s);
+    return;
   }
+  // вход по логину и паролю: без внешних сервисов, работает откуда угодно
+  el.innerHTML =
+    `<form id="auth-form" class="auth-form">
+       <input id="auth-login" type="text" placeholder="логин" autocomplete="username" required>
+       <input id="auth-pass" type="password" placeholder="пароль (от 8 символов)" autocomplete="current-password" required>
+       <button type="submit">Войти</button>
+       <button type="button" id="auth-reg">Создать аккаунт</button>
+       <div class="auth-msg" id="auth-msg" hidden></div>
+     </form>`;
+  const doAuth = async action => {
+    const msg = $('auth-msg');
+    msg.hidden = true;
+    try {
+      await Api.auth(action, $('auth-login').value.trim(), $('auth-pass').value);
+      renderAuth();
+      await syncNow(true);
+    } catch (e) {
+      msg.hidden = false;
+      msg.textContent = e.message;
+    }
+  };
+  $('auth-form').addEventListener('submit', e => { e.preventDefault(); doAuth('login'); });
+  $('auth-reg').addEventListener('click', () => doAuth('register'));
 }
-
-// колбэк виджета Telegram Login — должен быть глобальным
-window.onTelegramAuth = async user => {
-  try {
-    await Api.loginTelegram(user);
-    renderAuth();
-    await syncNow(true);
-  } catch (e) {
-    status('Вход не удался: ' + e.message, true);
-  }
-};
 
 // --- резервная копия: до появления аккаунтов данные живут только в localStorage ---
 const BACKUP_KEYS = ['fishcast.point', 'fishcast.points', 'fishcast.species',
