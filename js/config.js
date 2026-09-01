@@ -1,7 +1,7 @@
 // Вся настройка модели живёт здесь. В коде скоринга — только формулы.
 // Версия конфига нужна для будущей калибровки по журналу.
 const CONFIG = {
-  version: '0.2.1',
+  version: '0.3.0',
   baseline: 42,
 
   // Профили видов. multiplier — насколько сильно фактор влияет на этот вид.
@@ -14,7 +14,7 @@ const CONFIG = {
       wind: 1.0,
       pressure: 1.2,
       solunar: 1.0,
-      season: [ -5, -5, 0, 8, 10, 6, 0, 3, 10, 12, 8, 2 ], // янв..дек
+      season: [ -3, -3, 0, 4, 5, 3, 0, 2, 5, 6, 4, 1 ], // янв..дек; амплитуда сжата (урок 02.09: сезон-константа сдвигал весь месяц)
       tempAir: { cold: 0, hotFrom: 26, hotPenalty: -10 },
       waterOpt: [8, 20],        // оптимум температуры воды, °C
     },
@@ -26,7 +26,7 @@ const CONFIG = {
       wind: 1.1,
       pressure: 1.3,
       solunar: 0.9,
-      season: [ 2, 0, 5, 10, 6, 2, -3, 0, 10, 14, 10, 4 ],
+      season: [ 1, 0, 3, 5, 3, 1, -2, 0, 5, 7, 5, 2 ],
       tempAir: { cold: 0, hotFrom: 24, hotPenalty: -15 },
       waterOpt: [6, 18],        // оптимум температуры воды, °C
     },
@@ -38,7 +38,7 @@ const CONFIG = {
       wind: 0.9,
       pressure: 1.1,
       solunar: 1.0,
-      season: [ 0, -2, 2, 6, 6, 4, 2, 4, 8, 10, 8, 3 ],
+      season: [ 0, -1, 1, 3, 3, 2, 1, 2, 4, 5, 4, 2 ],
       tempAir: { cold: 0, hotFrom: 27, hotPenalty: -8 },
       waterOpt: [8, 18],        // оптимум температуры воды, °C
     },
@@ -50,7 +50,7 @@ const CONFIG = {
       wind: 1.0,
       pressure: 1.0,
       solunar: 1.0,
-      season: [ 3, 2, 4, 6, 6, 8, 6, 8, 10, 8, 4, 4 ],
+      season: [ 2, 1, 2, 3, 3, 4, 3, 4, 5, 4, 2, 2 ],
       tempAir: { cold: 0, hotFrom: 29, hotPenalty: -6 },
       waterOpt: [10, 22],        // оптимум температуры воды, °C
     },
@@ -62,7 +62,7 @@ const CONFIG = {
       wind: 1.2,
       pressure: 1.4,
       solunar: 1.1,
-      season: [ -2, -4, -2, 4, 10, 10, 8, 8, 6, 2, -2, -2 ],
+      season: [ -1, -2, -1, 2, 5, 5, 4, 4, 3, 1, -1, -1 ],
       tempAir: { cold: -8, hotFrom: 30, hotPenalty: -5 },
       waterOpt: [12, 23],        // оптимум температуры воды, °C
     },
@@ -122,7 +122,7 @@ const CONFIG = {
   },
 
   cloud: {
-    weights: { overcast: 6, partly: 2, clearMidday: -8 },
+    weights: { overcast: 5, partly: 2, clearMidday: -8 },
   },
 
   precipitation: {

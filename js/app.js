@@ -436,9 +436,17 @@ function scheduleSync() {
 
 function renderAuth() {
   const el = $('auth-area');
-  if (!Api.ready) { el.hidden = true; return; }
   el.hidden = false;
   el.innerHTML = '';
+  // без сервера форму не прячем молча — объясняем, где аккаунт
+  if (!Api.ready) {
+    const why = Api.base === null
+      ? 'появятся после развёртывания сервера (backend/README.md)'
+      : 'сервер сейчас недоступен';
+    el.innerHTML = `<span class="auth-off">Аккаунт и синхронизация между устройствами ${why}. ` +
+      `Пока данные живут в этом браузере — не забывай про копию ниже.</span>`;
+    return;
+  }
   if (Api.token) {
     const name = localStorage.getItem('fishcast.user') || '';
     el.innerHTML = `<span>Синхронизация включена${name ? ': ' + name : ''}</span> ` +
