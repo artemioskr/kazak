@@ -9,11 +9,11 @@
   --amber-dim: #7a5a2a;
   --silt: #3a4d5c;
   --cyan: #46cfc3;
-  /* шкала категорий клёва: холод -> янтарь, яркость растёт с оценкой */
+  /* шкала категорий клёва: холод -> янтарь -> зелёный, яркость растёт с оценкой */
   --cat-poor: #3a4d5c;
   --cat-mid: #6a7f8d;
   --cat-good: #c98a2f;
-  --cat-top: #ffbe55;
+  --cat-top: #8ce99a;
   --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 * { box-sizing: border-box; }
@@ -80,7 +80,7 @@ button, select { font: inherit; }
 .bar i { display: block; width: 100%; border-radius: 2px 2px 0 0; background: var(--cat-poor); transition: height .25s ease; }
 .bar[data-cat="средне"] i { background: var(--cat-mid); }
 .bar[data-cat="хорошо"] i { background: var(--cat-good); }
-.bar[data-cat="отлично"] i { background: var(--cat-top); box-shadow: 0 0 8px rgba(255, 190, 85, .4); }
+.bar[data-cat="отлично"] i { background: var(--cat-top); box-shadow: 0 0 8px rgba(140, 233, 154, .4); }
 .bar.major::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); border-radius: 2px; }
 .bar.minor::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); opacity: .45; border-radius: 2px; }
 .bar[aria-current="true"] i { outline: 2px solid var(--ink); outline-offset: 0; }
