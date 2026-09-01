@@ -221,10 +221,10 @@ function renderDays() {
 
 function dotColor(score) {
   const c = CONFIG.categories;
-  if (score >= c[0].from) return 'var(--amber)';
-  if (score >= c[1].from) return 'var(--amber-dim)';
-  if (score >= c[2].from) return '#4f6474';
-  return 'var(--silt)';
+  if (score >= c[0].from) return 'var(--cat-top)';
+  if (score >= c[1].from) return 'var(--cat-good)';
+  if (score >= c[2].from) return 'var(--cat-mid)';
+  return 'var(--cat-poor)';
 }
 
 function renderDay() {
