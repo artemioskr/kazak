@@ -1,0 +1,134 @@
+/* Палитра: глубокая вода + янтарь эхолота. Одна гарнитура, табличные цифры. */
+:root {
+  --water: #0c1a26;
+  --deep: #13283a;
+  --ridge: #1f3a50;
+  --ink: #e7eef4;
+  --mute: #8ea3b4;
+  --amber: #f0a63a;
+  --amber-dim: #7a5a2a;
+  --silt: #3a4d5c;
+  --cyan: #46cfc3;
+  /* шкала категорий клёва: холод -> янтарь -> зелёный, яркость растёт с оценкой */
+  --cat-poor: #3a4d5c;
+  --cat-mid: #6a7f8d;
+  --cat-good: #c98a2f;
+  --cat-top: #8ce99a;
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--water); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; }
+body { font-variant-numeric: tabular-nums; padding-bottom: env(safe-area-inset-bottom); }
+button, select { font: inherit; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+
+.top { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 8px; }
+.brand { font-weight: 600; font-size: 20px; letter-spacing: -0.01em; }
+.species { display: flex; align-items: center; gap: 8px; color: var(--mute); font-size: 14px; }
+.species select { background: var(--deep); color: var(--ink); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 10px; }
+
+#map { height: 40vh; min-height: 240px; background: var(--deep); }
+.leaflet-container { font-family: var(--font); }
+.point-marker { width: 14px; height: 14px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 0 4px rgba(240,166,58,.25), 0 0 0 1px var(--water); }
+
+.point-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: var(--mute); }
+.point-row button, .status button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+
+.controls-row { display: flex; gap: 8px; align-items: center; padding: 0 16px 10px; }
+.controls-row select { flex: 1 1 0; min-width: 0; background: var(--deep); color: var(--ink); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 8px; font-size: 14px; }
+.controls-row button { flex: 0 0 auto; background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.controls-row button[hidden] { display: none; }
+
+.status { margin: 0 16px 12px; padding: 12px 14px; background: var(--deep); border-radius: 8px; font-size: 14px; color: var(--mute); }
+.status.error { color: #f3b7a5; }
+
+/* дни */
+.days { display: flex; gap: 6px; overflow-x: auto; padding: 4px 16px 12px; scrollbar-width: none; }
+.days::-webkit-scrollbar { display: none; }
+.day { flex: 0 0 auto; background: var(--deep); border: 1px solid transparent; color: var(--mute); border-radius: 8px; padding: 6px 10px; text-align: center; cursor: pointer; min-width: 58px; }
+.day b { display: block; color: var(--ink); font-weight: 500; font-size: 15px; }
+.day small { display: block; font-size: 12px; margin-top: 2px; }
+.day[aria-current="true"] { border-color: var(--amber); color: var(--ink); }
+.day.past { opacity: .55; }
+.day.past[aria-current="true"] { opacity: 1; border-color: var(--mute); }
+.day .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--silt); margin-top: 4px; }
+
+/* часы рыбалки */
+.dayparts { display: flex; gap: 6px; padding: 0 16px 12px; overflow-x: auto; scrollbar-width: none; }
+.dayparts::-webkit-scrollbar { display: none; }
+.dp { flex: 0 0 auto; background: transparent; border: 1px solid var(--ridge); color: var(--mute); border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.dp[aria-pressed="true"] { border-color: var(--amber); color: var(--ink); }
+
+.day-head { padding: 0 16px; }
+.day-title { font-size: 18px; font-weight: 500; }
+.day-meta { font-size: 13px; color: var(--mute); margin-top: 2px; }
+
+.ban { margin: 10px 16px 0; padding: 10px 12px; border-left: 3px solid var(--amber); background: var(--deep); font-size: 13px; color: var(--ink); }
+
+/* сводка погоды дня */
+.day-summary { display: flex; flex-wrap: wrap; gap: 2px 8px; padding: 8px 16px 0; font-size: 13px; color: var(--ink); }
+.day-summary span { white-space: nowrap; }
+.day-summary span:not(:last-child)::after { content: '·'; margin-left: 8px; color: var(--silt); }
+
+.windows { padding: 10px 16px 6px; font-size: 14px; }
+.windows .w { display: inline-block; margin: 0 8px 6px 0; padding: 4px 10px; border-radius: 6px; background: var(--amber-dim); color: var(--ink); }
+.windows .none { color: var(--mute); }
+
+/* столбики по часам — сигнатурный элемент, как эхо на экране */
+.bars { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; height: 120px; align-items: end; padding: 8px 16px 0; }
+.bar { position: relative; height: 100%; background: transparent; border: 0; padding: 0; cursor: pointer; display: flex; align-items: flex-end; }
+.bar i { display: block; width: 100%; border-radius: 2px 2px 0 0; background: var(--cat-poor); transition: height .25s ease; }
+.bar[data-cat="средне"] i { background: var(--cat-mid); }
+.bar[data-cat="хорошо"] i { background: var(--cat-good); }
+.bar[data-cat="отлично"] i { background: var(--cat-top); box-shadow: 0 0 8px rgba(140, 233, 154, .4); }
+.bar.major::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); border-radius: 2px; }
+.bar.minor::after { content: ''; position: absolute; left: 0; right: 0; bottom: -6px; height: 3px; background: var(--cyan); opacity: .45; border-radius: 2px; }
+.bar[aria-current="true"] i { outline: 2px solid var(--ink); outline-offset: 0; }
+.bar.off i { opacity: .3; }
+.bars-axis { display: flex; justify-content: space-between; padding: 10px 16px 0; font-size: 12px; color: var(--mute); }
+.cat-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 16px 0; font-size: 12px; color: var(--mute); }
+.cat-legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+
+.hour-head { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 2px; }
+.hour-time { font-size: 15px; color: var(--mute); }
+.hour-score { font-size: 28px; font-weight: 600; }
+.hour-score small { font-size: 14px; font-weight: 400; color: var(--mute); margin-left: 8px; }
+.hour-weather { padding: 0 16px; font-size: 14px; color: var(--mute); }
+
+.factors { list-style: none; margin: 10px 0 0; padding: 0 16px; }
+.factors li { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 8px 0; border-top: 1px solid var(--ridge); font-size: 15px; }
+.factors .d { font-weight: 600; text-align: right; }
+.factors .d.plus { color: var(--amber); }
+.factors .d.minus { color: #d97b6a; }
+.factors .t { color: var(--mute); font-size: 13px; }
+
+.hour-head #log-add { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+
+/* журнал рыбалок */
+.journal { margin-top: 20px; padding: 0 16px; }
+.j-head { display: flex; align-items: center; justify-content: space-between; padding-bottom: 6px; }
+.j-head button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer; }
+#journal { list-style: none; margin: 0; padding: 0; }
+#journal li { border-top: 1px solid var(--ridge); padding: 8px 0; font-size: 14px; }
+.j-row { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.j-row b { font-weight: 500; }
+.j-cmp { color: var(--mute); margin-left: auto; }
+.j-del { background: transparent; border: 0; color: var(--mute); cursor: pointer; padding: 0 4px; }
+.j-note { color: var(--mute); font-size: 13px; margin-top: 2px; }
+
+.foot { padding: 24px 16px 20px; font-size: 12px; color: var(--mute); }
+.auth { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; font-size: 13px; color: var(--ink); }
+.auth-off { color: var(--mute); font-size: 12px; }
+.auth button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+.auth-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.auth-form input { background: var(--deep); color: var(--ink); border: 1px solid var(--ridge); border-radius: 6px; padding: 6px 10px; font-size: 13px; flex: 1 1 120px; min-width: 0; }
+.auth-msg { flex-basis: 100%; color: #f3b7a5; font-size: 12px; }
+
+.backup { display: flex; gap: 8px; margin-bottom: 12px; }
+.backup button { background: transparent; color: var(--cyan); border: 1px solid var(--ridge); border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+@media (min-width: 720px) {
+  body { max-width: 720px; margin: 0 auto; }
+  #map { height: 46vh; border-radius: 8px; margin: 0 16px; }
+}

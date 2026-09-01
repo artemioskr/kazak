@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c1a26">
+<title>FishCast — прогноз активности рыбы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="css/style.css?v=639450f">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">FishCast</div>
+  <label class="species">
+    <span>Вид</span>
+    <select id="species"></select>
+  </label>
+</header>
+
+<div id="map" role="application" aria-label="Карта: тапни, чтобы поставить точку"></div>
+
+<div class="point-row">
+  <span id="point-label">Точка не выбрана</span>
+  <button id="locate" type="button">Где я</button>
+</div>
+
+<div class="controls-row">
+  <select id="points" aria-label="Сохранённые точки"></select>
+  <button id="save-point" type="button" title="Сохранить текущую точку">★</button>
+  <button id="del-point" type="button" title="Удалить выбранную точку">✕</button>
+  <select id="waterbody" aria-label="Тип водоёма"></select>
+</div>
+
+<section id="status" class="status" hidden></section>
+
+<section id="forecast" hidden>
+  <nav class="days" id="days" aria-label="Дни"></nav>
+
+  <!-- часы планируемой рыбалки: цвет точки дня и лучший час считаются по этому отрезку -->
+  <nav class="dayparts" id="dayparts" aria-label="Часы рыбалки"></nav>
+
+  <div class="day-head">
+    <div class="day-title" id="day-title"></div>
+    <div class="day-meta" id="day-meta"></div>
+  </div>
+
+  <div class="ban" id="ban" hidden></div>
+
+  <div class="day-summary" id="day-summary"></div>
+
+  <div class="windows" id="windows"></div>
+
+  <div class="bars" id="bars" role="list"></div>
+  <div class="bars-axis"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div>
+  <div class="cat-legend">
+    <span><i style="background:var(--cat-poor)"></i>слабо</span>
+    <span><i style="background:var(--cat-mid)"></i>средне</span>
+    <span><i style="background:var(--cat-good)"></i>хорошо</span>
+    <span><i style="background:var(--cat-top)"></i>отлично</span>
+  </div>
+
+  <div class="hour-head">
+    <div class="hour-time" id="hour-time"></div>
+    <button id="log-add" type="button" title="Записать этот час в журнал">+ в журнал</button>
+    <div class="hour-score" id="hour-score"></div>
+  </div>
+  <div class="hour-weather" id="hour-weather"></div>
+  <ul class="factors" id="factors"></ul>
+</section>
+
+<section class="journal" id="journal-sec" hidden>
+  <div class="j-head">
+    <b>Журнал рыбалок</b>
+    <button id="log-export" type="button">Экспорт JSON</button>
+  </div>
+  <ul id="journal"></ul>
+</section>
+
+<footer class="foot">
+  <div class="auth" id="auth-area" hidden></div>
+  <div class="backup">
+    <button id="backup-save" type="button">Скачать копию данных</button>
+    <button id="backup-load" type="button">Восстановить из файла</button>
+    <input type="file" id="backup-file" accept="application/json" hidden>
+  </div>
+  Оценка — вероятность активности, не гарантия клёва. Погода: Open-Meteo. Луна: SunCalc.
+  Модель <span id="cfg-version"></span>.
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+<script src="js/config.js?v=639450f"></script>
+<script src="js/api.js?v=639450f"></script>
+<script src="js/weather.js?v=639450f"></script>
+<script src="js/watertemp.js?v=639450f"></script>
+<script src="js/kp.js?v=639450f"></script>
+<script src="js/solunar.js?v=639450f"></script>
+<script src="js/scoring.js?v=639450f"></script>
+<script src="js/app.js?v=639450f"></script>
+</body>
+</html>
